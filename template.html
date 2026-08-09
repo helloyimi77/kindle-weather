@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="480">
-<title>東京 気象板</title>
+<title>羽田空港 気象板</title>
 
 <style>
   html, body {
@@ -73,22 +73,10 @@
     margin: 3px 0 8px;
   }
 
-  .info {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-    font-size: 21px;
+  .sky {
+    font-size: 18px;
     line-height: 1.5;
-  }
-
-  .info-row {
-    display: table-row;
-  }
-
-  .info-cell {
-    display: table-cell;
-    width: 50%;
-    vertical-align: middle;
+    margin: 6px 0;
   }
 
   .wind {
@@ -128,7 +116,7 @@
 
 <body>
 
-  <div class="place">東京</div>
+  <div class="place">東京 羽田</div>
 
   <div class="updated">
     {{UPDATED}}
@@ -162,11 +150,8 @@
     降水確率 {{POP}} %
   </div>
 
-  <div class="info">
-    <div class="info-row">
-      <div class="info-cell">日の出 {{SUNRISE}}</div>
-      <div class="info-cell">日の入 {{SUNSET}}</div>
-    </div>
+  <div class="sky">
+    雲量 {{CLOUD_COVER}}%　　雲底 {{CLOUD_BASE}}km　　露点 {{DEWPOINT}}℃
   </div>
 
   <div class="wind">
