@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="480">
-<title>東京 気象板</title>
+<title>羽田空港 気象板</title>
 
 <style>
   html, body {
@@ -73,22 +73,10 @@
     margin: 3px 0 8px;
   }
 
-  .info {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
-    font-size: 21px;
+  .sky {
+    font-size: 18px;
     line-height: 1.5;
-  }
-
-  .info-row {
-    display: table-row;
-  }
-
-  .info-cell {
-    display: table-cell;
-    width: 50%;
-    vertical-align: middle;
+    margin: 6px 0;
   }
 
   .wind {
@@ -128,49 +116,46 @@
 
 <body>
 
-  <div class="place">東京　羽田</div>
+  <div class="place">東京 羽田</div>
 
   <div class="updated">
-    2026年08月10日 01:25 更新
+    2026年08月10日 01:49 更新
   </div>
 
   <div class="pressure">
-    1003.5
+    1007.4
     <span class="unit">hPa</span>
   </div>
 
   <div class="delta">
-    → +0.4 hPa / 24h
+    ↗ +0.5 hPa / 24h
   </div>
 
   <div class="delta-sub">
-    24時間前 1003.1 hPa
+    24時間前 1006.9 hPa
   </div>
 
   <div class="current">
-    現在 23.5 ℃　　湿度 95 %
+    現在 24.2 ℃　　湿度 91 %
   </div>
 
   <div class="rule"></div>
 
   <div class="forecast">
-    今日 ↑30 ℃（14時頃）<br>
-    明朝 ↓21 ℃（05時頃）
+    今日 ↑29 ℃（14時頃）<br>
+    明朝 ↓22 ℃（05時頃）
   </div>
 
   <div class="rain">
     降水確率 82 %
   </div>
 
-  <div class="info">
-    <div class="info-row">
-      <div class="info-cell">日の出 04:56</div>
-      <div class="info-cell">日の入 18:37</div>
-    </div>
+  <div class="sky">
+    雲量 5%　　雲底 0.2km　　露点 22.7℃
   </div>
 
   <div class="wind">
-    北西 0.7 m/s
+    北 1.8 m/s
   </div>
 
   <div class="trend-title">
@@ -185,13 +170,13 @@
 
   <table class="hourly">
     <tr>
-      <td>06時 23℃ 20%</td>
-      <td>09時 25℃ 41%</td>
+      <td>06時 24℃ 20%</td>
+      <td>09時 26℃ 41%</td>
     </tr>
 
     <tr>
-      <td>12時 29℃ 73%</td>
-      <td>15時 30℃ 80%</td>
+      <td>12時 28℃ 73%</td>
+      <td>15時 29℃ 80%</td>
     </tr>
 
     <tr>
