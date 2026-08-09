@@ -5,8 +5,8 @@ import json
 import urllib.request
 
 JST = timezone(timedelta(hours=9))
-LAT = 35.6895
-LON = 139.6917
+LAT = 35.5494
+LON = 139.7798
 
 URL = (
     "https://api.open-meteo.com/v1/forecast"
