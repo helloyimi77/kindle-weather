@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="480">
 <title>東京 気象板</title>
+
 <style>
   html, body {
     margin: 0;
@@ -12,92 +14,154 @@
     color: #000;
     font-family: serif;
   }
+
   body {
     text-align: center;
-    padding: 18px 14px 24px;
+    padding: 14px 12px 18px;
   }
+
   .place {
-    font-size: 30px;
-    margin: 0 0 5px;
+    font-size: 29px;
+    margin: 0 0 3px;
   }
+
   .updated {
-    font-size: 16px;
-    margin-bottom: 14px;
-  }
-  .pressure {
-    font-size: 64px;
-    font-weight: bold;
-    line-height: 1.05;
-    margin: 6px 0 4px;
-  }
-  .pressure .unit {
-    font-size: 26px;
-  }
-  .delta {
-    font-size: 24px;
-    margin: 8px 0 5px;
-  }
-  .delta-sub {
-    font-size: 16px;
-    margin: 0 0 18px;
-  }
-  .current {
-    font-size: 25px;
-    margin: 8px 0 18px;
-  }
-  .rule {
-    border-top: 2px solid #000;
-    margin: 0 0 17px;
-  }
-  .forecast {
-    font-size: 27px;
-    font-weight: bold;
-    line-height: 1.6;
+    font-size: 15px;
     margin-bottom: 10px;
   }
+
+  .pressure {
+    font-size: 61px;
+    font-weight: bold;
+    line-height: 1.03;
+    margin: 4px 0 3px;
+  }
+
+  .pressure .unit {
+    font-size: 24px;
+  }
+
+  .delta {
+    font-size: 22px;
+    margin: 6px 0 3px;
+  }
+
+  .delta-sub {
+    font-size: 15px;
+    margin: 0 0 12px;
+  }
+
+  .current {
+    font-size: 23px;
+    margin: 6px 0 12px;
+  }
+
+  .rule {
+    border-top: 2px solid #000;
+    margin: 0 0 11px;
+  }
+
+  .forecast {
+    font-size: 24px;
+    font-weight: bold;
+    line-height: 1.45;
+    margin-bottom: 5px;
+  }
+
+  .rain {
+    font-size: 22px;
+    margin: 3px 0;
+  }
+
   .info {
     display: table;
     width: 100%;
     table-layout: fixed;
-    font-size: 22px;
-    line-height: 1.7;
+    font-size: 19px;
+    line-height: 1.45;
   }
+
   .info-row {
     display: table-row;
   }
+
   .info-cell {
     display: table-cell;
     width: 50%;
     vertical-align: middle;
   }
-  .rain {
-    font-size: 25px;
-    margin: 6px 0 3px;
-  }
+
   .wind {
-    font-size: 24px;
-    margin-top: 4px;
+    font-size: 20px;
+    margin-top: 2px;
+  }
+
+  .trend-title {
+    margin: 10px 0 4px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .trend {
+    font-size: 18px;
+    line-height: 1.35;
+    margin-bottom: 5px;
+  }
+
+  .hourly {
+    width: 94%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 17px;
+    line-height: 1.25;
+  }
+
+  .hourly td {
+    padding: 2px 3px;
+    text-align: center;
+    white-space: nowrap;
   }
 </style>
 </head>
+
 <body>
+
   <div class="place">東京</div>
-  <div class="updated">2026年08月10日 00:42 更新</div>
 
-  <div class="pressure">1003.9 <span class="unit">hPa</span></div>
-  <div class="delta">→ +0.2 hPa / 24h</div>
-  <div class="delta-sub">24時間前 1003.7 hPa</div>
+  <div class="updated">
+    2026年08月10日 01:08 更新
+  </div>
 
-  <div class="current">現在 23.7 ℃　　湿度 95 %</div>
+  <div class="pressure">
+    1003.6
+    <span class="unit">hPa</span>
+  </div>
+
+  <div class="delta">
+    ↗
+    +0.5
+    hPa / 24h
+  </div>
+
+  <div class="delta-sub">
+    24時間前 1003.1 hPa
+  </div>
+
+  <div class="current">
+    現在 23.6 ℃　　湿度 95 %
+  </div>
 
   <div class="rule"></div>
 
   <div class="forecast">
-    今日 ↑30 ℃（14時頃）<br>
+    今日 ↑30 ℃（14時頃）
+    <br>
     明朝 ↓21 ℃（05時頃）
   </div>
 
-  <div class="rain">降水確率 82 %</div>
+  <div class="rain">
+    降水確率 82 %
+  </div>
 
   <div class="info">
     <div class="info-row">
@@ -106,6 +170,31 @@
     </div>
   </div>
 
-  <div class="wind">北 0.6 m/s</div>
+  <div class="wind">
+    北 0.6 m/s
+  </div>
+
+  <div class="trend-title">──── 今日の傾向 ────</div>
+  <div class="trend">
+    午前は晴れ時々くもり<br>
+    午後は晴れ時々くもり<br>
+    気圧はほぼ横ばい
+  </div>
+
+  <table class="hourly">
+    <tr>
+      <td>06時</td><td>23℃</td><td>20%</td>
+      <td>09時</td><td>25℃</td><td>41%</td>
+    </tr>
+    <tr>
+      <td>12時</td><td>29℃</td><td>73%</td>
+      <td>15時</td><td>30℃</td><td>80%</td>
+    </tr>
+    <tr>
+      <td>18時</td><td>26℃</td><td>45%</td>
+      <td>21時</td><td>24℃</td><td>39%</td>
+    </tr>
+  </table>
+
 </body>
 </html>
