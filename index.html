@@ -103,21 +103,22 @@
   }
 
   .trend {
-    font-size: 18px;
-    line-height: 1.35;
-    margin-bottom: 5px;
+    font-size: 19px;
+    line-height: 1.5;
+    margin-bottom: 6px;
   }
 
   .hourly {
-    width: 94%;
+    width: 100%;
     margin: 0 auto;
     border-collapse: collapse;
-    font-size: 17px;
-    line-height: 1.25;
+    font-size: 18px;
+    line-height: 1.4;
   }
 
   .hourly td {
-    padding: 2px 3px;
+    width: 50%;
+    padding: 4px 6px;
     text-align: center;
     white-space: nowrap;
   }
@@ -129,18 +130,16 @@
   <div class="place">東京</div>
 
   <div class="updated">
-    2026年08月10日 01:08 更新
+    2026年08月10日 01:17 更新
   </div>
 
   <div class="pressure">
-    1003.6
+    1003.5
     <span class="unit">hPa</span>
   </div>
 
   <div class="delta">
-    ↗
-    +0.5
-    hPa / 24h
+    → +0.4 hPa / 24h
   </div>
 
   <div class="delta-sub">
@@ -148,14 +147,13 @@
   </div>
 
   <div class="current">
-    現在 23.6 ℃　　湿度 95 %
+    現在 23.5 ℃　　湿度 95 %
   </div>
 
   <div class="rule"></div>
 
   <div class="forecast">
-    今日 ↑30 ℃（14時頃）
-    <br>
+    今日 ↑30 ℃（14時頃）<br>
     明朝 ↓21 ℃（05時頃）
   </div>
 
@@ -171,28 +169,33 @@
   </div>
 
   <div class="wind">
-    北 0.6 m/s
+    北西 0.7 m/s
   </div>
 
-  <div class="trend-title">──── 今日の傾向 ────</div>
+  <div class="trend-title">
+    ──── 今日の傾向 ────
+  </div>
+
   <div class="trend">
-    午前は晴れ時々くもり<br>
-    午後は晴れ時々くもり<br>
-    気圧はほぼ横ばい
+    午前：晴れ時々くもり<br>
+    午後：晴れ時々くもり<br>
+    気圧：下降傾向
   </div>
 
   <table class="hourly">
     <tr>
-      <td>06時</td><td>23℃</td><td>20%</td>
-      <td>09時</td><td>25℃</td><td>41%</td>
+      <td>06時 23℃ 20%</td>
+      <td>09時 25℃ 41%</td>
     </tr>
+
     <tr>
-      <td>12時</td><td>29℃</td><td>73%</td>
-      <td>15時</td><td>30℃</td><td>80%</td>
+      <td>12時 29℃ 73%</td>
+      <td>15時 30℃ 80%</td>
     </tr>
+
     <tr>
-      <td>18時</td><td>26℃</td><td>45%</td>
-      <td>21時</td><td>24℃</td><td>39%</td>
+      <td>18時 26℃ 45%</td>
+      <td>21時 24℃ 39%</td>
     </tr>
   </table>
 
