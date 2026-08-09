@@ -3,7 +3,7 @@ name: Update weather
 'on':
   workflow_dispatch:
   schedule:
-    - cron: "0 21 * * *"
+    - cron: "0 21 * * *"  # 毎日06:00 JST
 
 permissions:
   contents: write
@@ -20,6 +20,8 @@ jobs:
           python-version: "3.x"
 
       - name: Update weather page
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
         run: python update_weather.py
 
       - name: Commit changes
