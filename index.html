@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>東京 気象板</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: #000;
+    font-family: serif;
+  }
+  body {
+    text-align: center;
+    padding: 22px 12px 30px;
+  }
+  .place {
+    font-size: 32px;
+    margin: 0 0 8px;
+  }
+  .date {
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+  .pressure {
+    font-size: 70px;
+    font-weight: bold;
+    line-height: 1.05;
+    margin: 10px 0 4px;
+  }
+  .unit {
+    font-size: 28px;
+  }
+  .delta {
+    font-size: 26px;
+    margin: 14px 0 28px;
+  }
+  .row {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+    margin: 10px 0 26px;
+  }
+  .cell {
+    display: table-cell;
+    width: 50%;
+    vertical-align: middle;
+  }
+  .label {
+    font-size: 20px;
+  }
+  .value {
+    font-size: 42px;
+    font-weight: bold;
+  }
+  .footer {
+    border-top: 2px solid #000;
+    padding-top: 12px;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+  <div class="place">東京</div>
+  <div class="date">初回更新前</div>
+
+  <div class="pressure">----.- <span class="unit">hPa</span></div>
+  <div class="delta">24時間変化 －</div>
+
+  <div class="row">
+    <div class="cell">
+      <div class="label">気温</div>
+      <div class="value">--.- ℃</div>
+    </div>
+    <div class="cell">
+      <div class="label">湿度</div>
+      <div class="value">-- %</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    東京の気象情報<br>
+    1日1回更新 / Kindle向け
+  </div>
+</body>
+</html>
