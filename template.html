@@ -17,63 +17,68 @@
 
   body {
     text-align: center;
-    padding: 18px 14px 24px;
+    padding: 14px 12px 18px;
   }
 
   .place {
-    font-size: 30px;
-    margin: 0 0 5px;
+    font-size: 29px;
+    margin: 0 0 3px;
   }
 
   .updated {
-    font-size: 16px;
-    margin-bottom: 14px;
+    font-size: 15px;
+    margin-bottom: 10px;
   }
 
   .pressure {
-    font-size: 64px;
+    font-size: 61px;
     font-weight: bold;
-    line-height: 1.05;
-    margin: 6px 0 4px;
+    line-height: 1.03;
+    margin: 4px 0 3px;
   }
 
   .pressure .unit {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .delta {
-    font-size: 24px;
-    margin: 8px 0 5px;
+    font-size: 22px;
+    margin: 6px 0 3px;
   }
 
   .delta-sub {
-    font-size: 16px;
-    margin: 0 0 18px;
+    font-size: 15px;
+    margin: 0 0 12px;
   }
 
   .current {
-    font-size: 25px;
-    margin: 8px 0 18px;
+    font-size: 23px;
+    margin: 6px 0 12px;
   }
 
   .rule {
     border-top: 2px solid #000;
-    margin: 0 0 17px;
+    margin: 0 0 11px;
   }
 
   .forecast {
-    font-size: 27px;
+    font-size: 24px;
     font-weight: bold;
-    line-height: 1.6;
-    margin-bottom: 10px;
+    line-height: 1.45;
+    margin-bottom: 5px;
+  }
+
+  .rain {
+    font-size: 22px;
+    margin: 3px 0;
   }
 
   .info {
     display: table;
     width: 100%;
     table-layout: fixed;
-    font-size: 22px;
-    line-height: 1.7;
+    font-size: 19px;
+    line-height: 1.45;
   }
 
   .info-row {
@@ -86,14 +91,35 @@
     vertical-align: middle;
   }
 
-  .rain {
-    font-size: 25px;
-    margin: 6px 0 3px;
+  .wind {
+    font-size: 20px;
+    margin-top: 2px;
   }
 
-  .wind {
-    font-size: 24px;
-    margin-top: 4px;
+  .trend-title {
+    margin: 10px 0 4px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .trend {
+    font-size: 18px;
+    line-height: 1.35;
+    margin-bottom: 5px;
+  }
+
+  .hourly {
+    width: 94%;
+    margin: 0 auto;
+    border-collapse: collapse;
+    font-size: 17px;
+    line-height: 1.25;
+  }
+
+  .hourly td {
+    padding: 2px 3px;
+    text-align: center;
+    white-space: nowrap;
   }
 </style>
 </head>
@@ -139,19 +165,36 @@
 
   <div class="info">
     <div class="info-row">
-      <div class="info-cell">
-        日の出 {{SUNRISE}}
-      </div>
-
-      <div class="info-cell">
-        日の入 {{SUNSET}}
-      </div>
+      <div class="info-cell">日の出 {{SUNRISE}}</div>
+      <div class="info-cell">日の入 {{SUNSET}}</div>
     </div>
   </div>
 
   <div class="wind">
     {{WIND_DIR}} {{WIND_SPEED}} m/s
   </div>
+
+  <div class="trend-title">──── 今日の傾向 ────</div>
+  <div class="trend">
+    午前は{{MORNING_WEATHER}}<br>
+    午後は{{AFTERNOON_WEATHER}}<br>
+    気圧は{{PRESSURE_TREND}}
+  </div>
+
+  <table class="hourly">
+    <tr>
+      <td>06時</td><td>{{H06_TEMP}}℃</td><td>{{H06_POP}}%</td>
+      <td>09時</td><td>{{H09_TEMP}}℃</td><td>{{H09_POP}}%</td>
+    </tr>
+    <tr>
+      <td>12時</td><td>{{H12_TEMP}}℃</td><td>{{H12_POP}}%</td>
+      <td>15時</td><td>{{H15_TEMP}}℃</td><td>{{H15_POP}}%</td>
+    </tr>
+    <tr>
+      <td>18時</td><td>{{H18_TEMP}}℃</td><td>{{H18_POP}}%</td>
+      <td>21時</td><td>{{H21_TEMP}}℃</td><td>{{H21_POP}}%</td>
+    </tr>
+  </table>
 
 </body>
 </html>
