@@ -2,346 +2,701 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from collections import Counter
 import json
+import math
+import os
 import urllib.request
+import urllib.parse
+
 
 JST = timezone(timedelta(hours=9))
 
+# -------------------------
 # 羽田空港
+# -------------------------
+
 LAT = 35.5494
 LON = 139.7798
+ICAO = "RJTT"
 
-URL = (
-    "https://api.open-meteo.com/v1/forecast"
-    f"?latitude={LAT}&longitude={LON}"
-    "&current="
-    "temperature_2m,"
-    "relative_humidity_2m,"
-    "dew_point_2m,"
-    "surface_pressure,"
-    "cloud_cover,"
-    "wind_speed_10m,"
-    "wind_direction_10m"
-    "&hourly="
-    "temperature_2m,"
-    "surface_pressure,"
-    "precipitation_probability,"
-    "weather_code"
-    "&daily="
-    "precipitation_probability_max"
-    "&past_days=1"
-    "&forecast_days=2"
-    "&timezone=Asia%2FTokyo"
-    "&wind_speed_unit=ms"
-)
+OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]
 
 
-def fetch():
+# =========================================================
+# HTTP
+# =========================================================
+
+def fetch_json(url, user_agent="kindle-weather/5.0"):
+
     req = urllib.request.Request(
-        URL,
-        headers={"User-Agent": "kindle-weather/4.0"}
+        url,
+        headers={
+            "User-Agent": user_agent,
+            "Accept": "application/json"
+        }
     )
-    with urllib.request.urlopen(req, timeout=30) as r:
+
+    with urllib.request.urlopen(
+        req,
+        timeout=30
+    ) as r:
+
         return json.load(r)
 
 
-def parse_local(s):
-    return datetime.fromisoformat(s)
+# =========================================================
+# OpenWeather
+# =========================================================
 
+def fetch_openweather():
 
-def nearest_index(times, target):
-    dts = [parse_local(t) for t in times]
-    return min(
-        range(len(dts)),
-        key=lambda i: abs((dts[i] - target).total_seconds())
+    params = urllib.parse.urlencode({
+        "lat": LAT,
+        "lon": LON,
+        "appid": OPENWEATHER_API_KEY,
+        "units": "metric",
+        "lang": "ja",
+        "exclude": "minutely,alerts"
+    })
+
+    url = (
+        "https://api.openweathermap.org/"
+        "data/3.0/onecall?"
+        + params
+    )
+
+    return fetch_json(
+        url,
+        "kindle-weather-openweather/5.0"
     )
 
 
+# =========================================================
+# METAR
+# =========================================================
+
+def fetch_metar(hours=25):
+
+    params = urllib.parse.urlencode({
+        "ids": ICAO,
+        "format": "json",
+        "hours": hours
+    })
+
+    url = (
+        "https://aviationweather.gov/"
+        "api/data/metar?"
+        + params
+    )
+
+    return fetch_json(
+        url,
+        "kindle-weather-metar/5.0"
+    )
+
+
+# =========================================================
+# 共通
+# =========================================================
+
 def wind_dir_jp(deg):
+
+    if deg is None:
+        return "静穏"
+
     names = [
-        "北", "北東", "東", "南東",
-        "南", "南西", "西", "北西"
+        "北",
+        "北東",
+        "東",
+        "南東",
+        "南",
+        "南西",
+        "西",
+        "北西"
     ]
-    return names[int((deg + 22.5) // 45) % 8]
+
+    return names[
+        int((float(deg) + 22.5) // 45) % 8
+    ]
 
 
 def fmt_signed(x):
+
     if x > 0:
         return f"+{x:.1f}"
+
     if x < 0:
         return f"{x:.1f}"
+
     return "±0.0"
 
 
 def pressure_arrow(x):
+
     if x >= 0.5:
         return "↗"
+
     if x <= -0.5:
         return "↘"
+
     return "→"
 
 
 def pressure_trend_text(delta3h):
+
     if delta3h <= -2.0:
         return "大きく下降"
+
     if delta3h <= -0.7:
         return "下降傾向"
+
     if delta3h >= 2.0:
         return "大きく上昇"
+
     if delta3h >= 0.7:
         return "上昇傾向"
+
     return "ほぼ横ばい"
 
 
-def weather_label(code):
-    if code == 0:
-        return "晴れ"
+def relative_humidity(temp_c, dew_c):
+    """
+    気温・露点から相対湿度を計算
+    Magnus式
+    """
 
-    if code in (1, 2):
-        return "晴れ時々くもり"
+    if temp_c is None or dew_c is None:
+        return None
 
-    if code == 3:
-        return "くもり"
+    a = 17.625
+    b = 243.04
 
-    if code in (45, 48):
-        return "霧"
+    e = math.exp(
+        (a * dew_c) /
+        (b + dew_c)
+    )
 
-    if code in (51, 53, 55, 56, 57):
-        return "小雨"
+    es = math.exp(
+        (a * temp_c) /
+        (b + temp_c)
+    )
 
-    if code in (
-        61, 63, 65, 66, 67,
-        80, 81, 82
+    rh = 100.0 * e / es
+
+    return max(
+        0,
+        min(100, round(rh))
+    )
+
+
+# =========================================================
+# METAR解析
+# =========================================================
+
+def metar_timestamp(record):
+
+    # 新旧APIのフィールド名差を吸収
+    for key in (
+        "obsTime",
+        "reportTime",
+        "receiptTime"
     ):
-        return "雨"
 
-    if code in (
-        71, 73, 75, 77,
-        85, 86
-    ):
-        return "雪"
+        value = record.get(key)
 
-    if code in (95, 96, 99):
-        return "雷雨"
+        if value is None:
+            continue
 
-    return "変わりやすい天気"
+        # Unix timestamp
+        if isinstance(value, (int, float)):
+            return datetime.fromtimestamp(
+                value,
+                tz=timezone.utc
+            )
 
+        # ISO文字列
+        try:
 
-def dominant_weather(
-    hour_times,
-    weather_codes,
-    target_date,
-    start_hour,
-    end_hour
-):
-    labels = []
+            s = str(value).replace(
+                "Z",
+                "+00:00"
+            )
 
-    for t, code in zip(hour_times, weather_codes):
-        dt = parse_local(t)
+            return datetime.fromisoformat(s)
 
-        if (
-            dt.date() == target_date
-            and start_hour <= dt.hour <= end_hour
-            and code is not None
-        ):
-            labels.append(weather_label(int(code)))
-
-    if not labels:
-        return "予報なし"
-
-    return Counter(labels).most_common(1)[0][0]
-
-
-def hour_value(
-    hour_times,
-    values,
-    target_date,
-    hour
-):
-    for t, v in zip(hour_times, values):
-        dt = parse_local(t)
-
-        if (
-            dt.date() == target_date
-            and dt.hour == hour
-        ):
-            return v
+        except Exception:
+            pass
 
     return None
 
 
-def cloud_okta(percent):
-    """
-    雲量%を8分量に換算
-    0% → 0/8
-    100% → 8/8
-    """
-    return int(round(percent * 8 / 100))
+def metar_pressure(record):
+
+    value = record.get("altim")
+
+    if value is None:
+        value = record.get("altimeter")
+
+    if value is None:
+        return None
+
+    value = float(value)
+
+    # APIによってinHg表現の場合に対応
+    if value < 100:
+        value *= 33.8638866667
+
+    return value
 
 
-def estimate_cloud_base_km(temp_c, dewpoint_c):
-    """
-    気温と露点差からLCL（雲底）を簡易推定。
+def metar_temperature(record):
 
-    約125 m × (気温 - 露点)
+    for key in (
+        "temp",
+        "tempC",
+        "temperature"
+    ):
 
-    ※観測された実際の雲底ではなく近似値。
-    """
-    spread = max(0.0, temp_c - dewpoint_c)
+        if record.get(key) is not None:
 
-    cloud_base_m = spread * 125.0
+            return float(
+                record[key]
+            )
 
-    return cloud_base_m / 1000.0
-
-
-def fmt_temp(v):
-    if v is None:
-        return "--"
-
-    return str(int(round(float(v))))
+    return None
 
 
-def fmt_pop(v):
-    if v is None:
-        return "--"
+def metar_dewpoint(record):
 
-    return str(int(round(float(v))))
+    for key in (
+        "dewp",
+        "dewpC",
+        "dewpoint"
+    ):
 
+        if record.get(key) is not None:
 
-# -------------------------
-# データ取得
-# -------------------------
+            return float(
+                record[key]
+            )
 
-data = fetch()
-
-cur = data["current"]
-hourly = data["hourly"]
-daily = data["daily"]
-
-now_local = parse_local(cur["time"])
-
-today = now_local.date()
-tomorrow = today + timedelta(days=1)
+    return None
 
 
-# -------------------------
-# 現在値
-# -------------------------
+def metar_wind(record):
 
-pressure = float(cur["surface_pressure"])
+    wdir = record.get("wdir")
+    wspd = record.get("wspd")
 
-temp = float(cur["temperature_2m"])
+    if wdir in (
+        "VRB",
+        "VAR",
+        None
+    ):
+        direction = None
 
-humidity = int(
-    round(
-        float(cur["relative_humidity_2m"])
+    else:
+
+        try:
+            direction = float(wdir)
+        except Exception:
+            direction = None
+
+    try:
+        speed_knots = float(wspd)
+    except Exception:
+        speed_knots = 0.0
+
+    # knot → m/s
+    speed_ms = (
+        speed_knots *
+        0.514444
     )
+
+    return (
+        direction,
+        speed_ms
+    )
+
+
+def metar_cloud(record):
+    """
+    METAR雲層から
+
+    雲量 → 最大雲量を8分量化
+    雲底 → 最も低い雲層
+
+    FEW 2/8
+    SCT 4/8
+    BKN 7/8
+    OVC 8/8
+    """
+
+    clouds = record.get("clouds", [])
+
+    coverage_map = {
+        "SKC": 0,
+        "CLR": 0,
+        "NSC": 0,
+        "NCD": 0,
+        "FEW": 2,
+        "SCT": 4,
+        "BKN": 7,
+        "OVC": 8,
+        "VV": 8
+    }
+
+    max_okta = 0
+    lowest_base_ft = None
+
+    if isinstance(clouds, list):
+
+        for cloud in clouds:
+
+            if not isinstance(
+                cloud,
+                dict
+            ):
+                continue
+
+            cover = (
+                cloud.get("cover")
+                or cloud.get("amount")
+            )
+
+            base = (
+                cloud.get("base")
+                or cloud.get("baseFtAGL")
+            )
+
+            if cover:
+
+                okta = coverage_map.get(
+                    str(cover).upper(),
+                    0
+                )
+
+                max_okta = max(
+                    max_okta,
+                    okta
+                )
+
+            if base is not None:
+
+                try:
+
+                    base = float(base)
+
+                    if (
+                        lowest_base_ft is None
+                        or base < lowest_base_ft
+                    ):
+
+                        lowest_base_ft = base
+
+                except Exception:
+                    pass
+
+    # cloudsが取れない場合raw METARを解析
+    if not clouds:
+
+        raw = (
+            record.get("rawOb")
+            or record.get("raw")
+            or ""
+        )
+
+        tokens = raw.split()
+
+        for token in tokens:
+
+            for code, okta in (
+                ("FEW", 2),
+                ("SCT", 4),
+                ("BKN", 7),
+                ("OVC", 8),
+                ("VV", 8)
+            ):
+
+                if token.startswith(code):
+
+                    max_okta = max(
+                        max_okta,
+                        okta
+                    )
+
+                    digits = token[
+                        len(code):
+                        len(code) + 3
+                    ]
+
+                    if digits.isdigit():
+
+                        base_ft = (
+                            int(digits)
+                            * 100
+                        )
+
+                        if (
+                            lowest_base_ft is None
+                            or
+                            base_ft <
+                            lowest_base_ft
+                        ):
+
+                            lowest_base_ft = (
+                                base_ft
+                            )
+
+    if lowest_base_ft is None:
+
+        base_km = None
+
+    else:
+
+        base_km = (
+            lowest_base_ft *
+            0.3048 /
+            1000
+        )
+
+    return (
+        max_okta,
+        base_km
+    )
+
+
+# =========================================================
+# METAR実況取得
+# =========================================================
+
+metars = fetch_metar(25)
+
+if not metars:
+    raise RuntimeError(
+        "RJTT METARを取得できませんでした"
+    )
+
+
+# 時刻順に並べる
+metars = sorted(
+    metars,
+    key=lambda r:
+        metar_timestamp(r)
+        or datetime.min.replace(
+            tzinfo=timezone.utc
+        )
 )
 
-dewpoint = float(cur["dew_point_2m"])
 
-cloud_cover_percent = float(cur["cloud_cover"])
+latest_metar = metars[-1]
 
-cloud_cover_okta = cloud_okta(
-    cloud_cover_percent
+latest_time = metar_timestamp(
+    latest_metar
 )
 
-cloud_base_km = estimate_cloud_base_km(
+if latest_time is None:
+
+    latest_time = datetime.now(
+        timezone.utc
+    )
+
+
+temp = metar_temperature(
+    latest_metar
+)
+
+dewpoint = metar_dewpoint(
+    latest_metar
+)
+
+pressure = metar_pressure(
+    latest_metar
+)
+
+if (
+    temp is None
+    or dewpoint is None
+    or pressure is None
+):
+    raise RuntimeError(
+        "METARの気温・露点・気圧を解析できませんでした"
+    )
+
+
+humidity = relative_humidity(
     temp,
     dewpoint
 )
 
-wind_speed = float(
-    cur["wind_speed_10m"]
+
+wind_deg, wind_speed = metar_wind(
+    latest_metar
 )
 
 wind_direction = wind_dir_jp(
-    float(cur["wind_direction_10m"])
+    wind_deg
 )
 
 
-# -------------------------
-# 時間データ
-# -------------------------
-
-hour_times = hourly["time"]
-
-hour_pressures = hourly[
-    "surface_pressure"
-]
-
-hour_temps = hourly[
-    "temperature_2m"
-]
-
-hour_pops = hourly[
-    "precipitation_probability"
-]
-
-hour_codes = hourly[
-    "weather_code"
-]
-
-
-# -------------------------
-# 24時間の気圧差
-# -------------------------
-
-idx_24h = nearest_index(
-    hour_times,
-    now_local - timedelta(hours=24)
+cloud_cover_okta, cloud_base_km = (
+    metar_cloud(
+        latest_metar
+    )
 )
 
-pressure_24h = float(
-    hour_pressures[idx_24h]
+
+# =========================================================
+# METAR 24時間・3時間気圧差
+# =========================================================
+
+def nearest_metar_pressure(
+    records,
+    target
+):
+
+    candidates = []
+
+    for r in records:
+
+        dt = metar_timestamp(r)
+        p = metar_pressure(r)
+
+        if (
+            dt is None
+            or p is None
+        ):
+            continue
+
+        diff = abs(
+            (
+                dt -
+                target
+            ).total_seconds()
+        )
+
+        candidates.append(
+            (
+                diff,
+                p
+            )
+        )
+
+    if not candidates:
+        return None
+
+    candidates.sort(
+        key=lambda x: x[0]
+    )
+
+    return candidates[0][1]
+
+
+pressure_24h = nearest_metar_pressure(
+    metars,
+    latest_time -
+    timedelta(hours=24)
 )
 
-delta24 = pressure - pressure_24h
-
-
-# -------------------------
-# 3時間の気圧差
-# -------------------------
-
-idx_3h = nearest_index(
-    hour_times,
-    now_local - timedelta(hours=3)
+pressure_3h = nearest_metar_pressure(
+    metars,
+    latest_time -
+    timedelta(hours=3)
 )
 
-pressure_3h = float(
-    hour_pressures[idx_3h]
+
+if pressure_24h is None:
+
+    pressure_24h = pressure
+
+if pressure_3h is None:
+
+    pressure_3h = pressure
+
+
+delta24 = (
+    pressure -
+    pressure_24h
 )
 
-delta3 = pressure - pressure_3h
+delta3 = (
+    pressure -
+    pressure_3h
+)
 
 
-# -------------------------
-# 今日の最高気温
-# -------------------------
+# =========================================================
+# OpenWeather予報
+# =========================================================
+
+ow = fetch_openweather()
+
+timezone_offset = int(
+    ow.get(
+        "timezone_offset",
+        9 * 3600
+    )
+)
+
+
+def ow_local_datetime(timestamp):
+
+    return datetime.fromtimestamp(
+        timestamp,
+        timezone.utc
+    ) + timedelta(
+        seconds=timezone_offset
+    )
+
+
+now_local = (
+    datetime.now(
+        timezone.utc
+    )
+    + timedelta(
+        seconds=timezone_offset
+    )
+)
+
+today = now_local.date()
+
+tomorrow = (
+    today +
+    timedelta(days=1)
+)
+
+
+hourly = ow.get(
+    "hourly",
+    []
+)
+
+daily = ow.get(
+    "daily",
+    []
+)
+
+
+# =========================================================
+# 今日最高
+# =========================================================
 
 today_points = []
 
-tomorrow_morning_points = []
+for h in hourly:
 
-for t, v in zip(
-    hour_times,
-    hour_temps
-):
-    if v is None:
-        continue
-
-    dt = parse_local(t)
+    dt = ow_local_datetime(
+        h["dt"]
+    )
 
     if dt.date() == today:
-        today_points.append(
-            (dt, float(v))
-        )
 
-    if (
-        dt.date() == tomorrow
-        and 0 <= dt.hour <= 9
-    ):
-        tomorrow_morning_points.append(
-            (dt, float(v))
+        today_points.append(
+            (
+                dt,
+                float(
+                    h["temp"]
+                )
+            )
         )
 
 
@@ -354,92 +709,234 @@ if today_points:
 
 else:
 
+    today_high = float(
+        daily[0]["temp"]["max"]
+    )
+
     high_dt = now_local
-    today_high = temp
 
 
-# -------------------------
-# 明朝最低
-# -------------------------
+# =========================================================
+# 明朝最低 0〜9時
+# =========================================================
 
-if tomorrow_morning_points:
+tomorrow_morning = []
+
+for h in hourly:
+
+    dt = ow_local_datetime(
+        h["dt"]
+    )
+
+    if (
+        dt.date() == tomorrow
+        and
+        0 <= dt.hour <= 9
+    ):
+
+        tomorrow_morning.append(
+            (
+                dt,
+                float(
+                    h["temp"]
+                )
+            )
+        )
+
+
+if tomorrow_morning:
 
     low_dt, tomorrow_low = min(
-        tomorrow_morning_points,
+        tomorrow_morning,
         key=lambda x: x[1]
     )
 
 else:
 
-    low_dt = (
-        now_local
-        + timedelta(days=1)
+    tomorrow_low = float(
+        daily[1]["temp"]["min"]
     )
 
-    tomorrow_low = temp
+    low_dt = (
+        now_local +
+        timedelta(days=1)
+    )
 
 
-# -------------------------
-# 今日の降水確率
-# -------------------------
+# =========================================================
+# 降水確率
+# =========================================================
 
-daily_dates = [
-    datetime.fromisoformat(x).date()
-    for x in daily["time"]
-]
+if daily:
 
-try:
-
-    di = daily_dates.index(today)
-
-except ValueError:
-
-    di = 0
-
-
-pop = daily[
-    "precipitation_probability_max"
-][di]
-
-if pop is None:
-
-    pop = "--"
-
-else:
+    today_pop = daily[0].get(
+        "pop",
+        0
+    )
 
     pop = str(
         int(
             round(
-                float(pop)
+                float(today_pop)
+                * 100
             )
         )
     )
 
+else:
 
-# -------------------------
-# 午前・午後の傾向
-# -------------------------
+    pop = "--"
 
-morning_weather = dominant_weather(
-    hour_times,
-    hour_codes,
-    today,
-    6,
-    11
+
+# =========================================================
+# OpenWeather天気分類
+# =========================================================
+
+def weather_label(
+    weather
+):
+
+    if not weather:
+        return "予報なし"
+
+    wid = int(
+        weather[0].get(
+            "id",
+            800
+        )
+    )
+
+    if wid == 800:
+        return "晴れ"
+
+    if wid in (
+        801,
+        802
+    ):
+        return "晴れ時々くもり"
+
+    if wid in (
+        803,
+        804
+    ):
+        return "くもり"
+
+    if 200 <= wid < 300:
+        return "雷雨"
+
+    if 300 <= wid < 400:
+        return "小雨"
+
+    if 500 <= wid < 600:
+        return "雨"
+
+    if 600 <= wid < 700:
+        return "雪"
+
+    if 700 <= wid < 800:
+        return "霧"
+
+    return "変わりやすい天気"
+
+
+def dominant_weather(
+    start_hour,
+    end_hour
+):
+
+    labels = []
+
+    for h in hourly:
+
+        dt = ow_local_datetime(
+            h["dt"]
+        )
+
+        if (
+            dt.date() == today
+            and
+            start_hour
+            <= dt.hour
+            <= end_hour
+        ):
+
+            labels.append(
+                weather_label(
+                    h.get(
+                        "weather",
+                        []
+                    )
+                )
+            )
+
+    if not labels:
+
+        return "予報なし"
+
+    return Counter(
+        labels
+    ).most_common(1)[0][0]
+
+
+morning_weather = (
+    dominant_weather(
+        6,
+        11
+    )
 )
 
-afternoon_weather = dominant_weather(
-    hour_times,
-    hour_codes,
-    today,
-    12,
-    17
+afternoon_weather = (
+    dominant_weather(
+        12,
+        17
+    )
 )
 
 
-# -------------------------
+# =========================================================
 # 時間別予報
-# -------------------------
+# =========================================================
+
+def hourly_value(
+    target_hour
+):
+
+    candidates = []
+
+    for h in hourly:
+
+        dt = ow_local_datetime(
+            h["dt"]
+        )
+
+        if (
+            dt.date() == today
+            and
+            dt.hour == target_hour
+        ):
+
+            return (
+                float(
+                    h["temp"]
+                ),
+                int(
+                    round(
+                        float(
+                            h.get(
+                                "pop",
+                                0
+                            )
+                        )
+                        * 100
+                    )
+                )
+            )
+
+    return (
+        None,
+        None
+    )
+
 
 hours = [
     6,
@@ -450,36 +947,55 @@ hours = [
     21
 ]
 
+
 hour_repl = {}
+
 
 for h in hours:
 
+    h_temp, h_pop = (
+        hourly_value(h)
+    )
+
+    if h_temp is None:
+
+        temp_text = "--"
+
+    else:
+
+        temp_text = str(
+            int(
+                round(
+                    h_temp
+                )
+            )
+        )
+
+
+    if h_pop is None:
+
+        pop_text = "--"
+
+    else:
+
+        pop_text = str(
+            h_pop
+        )
+
+
     hour_repl[
         f"{{{{H{h:02d}_TEMP}}}}"
-    ] = fmt_temp(
-        hour_value(
-            hour_times,
-            hour_temps,
-            today,
-            h
-        )
-    )
+    ] = temp_text
+
 
     hour_repl[
         f"{{{{H{h:02d}_POP}}}}"
-    ] = fmt_pop(
-        hour_value(
-            hour_times,
-            hour_pops,
-            today,
-            h
-        )
-    )
+    ] = pop_text
 
 
-# -------------------------
-# HTML生成
-# -------------------------
+# =========================================================
+# HTML
+# =========================================================
 
 template = Path(
     "template.html"
@@ -487,11 +1003,23 @@ template = Path(
     encoding="utf-8"
 )
 
+
 updated = datetime.now(
     JST
 ).strftime(
     "%Y年%m月%d日 %H:%M 更新"
 )
+
+
+if cloud_base_km is None:
+
+    cloud_base_text = "--"
+
+else:
+
+    cloud_base_text = (
+        f"{cloud_base_km:.1f}"
+    )
 
 
 replacements = {
@@ -503,10 +1031,14 @@ replacements = {
         f"{pressure:.1f}",
 
     "{{PRESSURE_ARROW}}":
-        pressure_arrow(delta24),
+        pressure_arrow(
+            delta24
+        ),
 
     "{{PRESSURE_DELTA}}":
-        fmt_signed(delta24),
+        fmt_signed(
+            delta24
+        ),
 
     "{{PRESSURE_24H_AGO}}":
         f"{pressure_24h:.1f}",
@@ -521,13 +1053,17 @@ replacements = {
         f"{today_high:.0f}",
 
     "{{TODAY_HIGH_TIME}}":
-        high_dt.strftime("%H時"),
+        high_dt.strftime(
+            "%H時"
+        ),
 
     "{{TOMORROW_LOW}}":
         f"{tomorrow_low:.0f}",
 
     "{{TOMORROW_LOW_TIME}}":
-        low_dt.strftime("%H時"),
+        low_dt.strftime(
+            "%H時"
+        ),
 
     "{{POP}}":
         pop,
@@ -545,13 +1081,17 @@ replacements = {
         afternoon_weather,
 
     "{{PRESSURE_TREND}}":
-        pressure_trend_text(delta3),
+        pressure_trend_text(
+            delta3
+        ),
 
     "{{CLOUD_COVER}}":
-        str(cloud_cover_okta),
+        str(
+            cloud_cover_okta
+        ),
 
     "{{CLOUD_BASE}}":
-        f"{cloud_base_km:.1f}",
+        cloud_base_text,
 
     "{{DEWPOINT}}":
         f"{dewpoint:.1f}",
@@ -565,7 +1105,10 @@ replacements.update(
 
 html = template
 
-for key, value in replacements.items():
+
+for key, value in (
+    replacements.items()
+):
 
     html = html.replace(
         key,
