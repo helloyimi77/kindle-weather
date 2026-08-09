@@ -159,10 +159,6 @@ def pressure_trend_text(delta3h):
 
 
 def relative_humidity(temp_c, dew_c):
-    """
-    気温・露点から相対湿度を計算
-    Magnus式
-    """
 
     if temp_c is None or dew_c is None:
         return None
@@ -194,7 +190,6 @@ def relative_humidity(temp_c, dew_c):
 
 def metar_timestamp(record):
 
-    # 新旧APIのフィールド名差を吸収
     for key in (
         "obsTime",
         "reportTime",
@@ -206,14 +201,12 @@ def metar_timestamp(record):
         if value is None:
             continue
 
-        # Unix timestamp
         if isinstance(value, (int, float)):
             return datetime.fromtimestamp(
                 value,
                 tz=timezone.utc
             )
 
-        # ISO文字列
         try:
 
             s = str(value).replace(
@@ -241,7 +234,6 @@ def metar_pressure(record):
 
     value = float(value)
 
-    # APIによってinHg表現の場合に対応
     if value < 100:
         value *= 33.8638866667
 
@@ -306,7 +298,6 @@ def metar_wind(record):
     except Exception:
         speed_knots = 0.0
 
-    # knot → m/s
     speed_ms = (
         speed_knots *
         0.514444
@@ -319,17 +310,6 @@ def metar_wind(record):
 
 
 def metar_cloud(record):
-    """
-    METAR雲層から
-
-    雲量 → 最大雲量を8分量化
-    雲底 → 最も低い雲層
-
-    FEW 2/8
-    SCT 4/8
-    BKN 7/8
-    OVC 8/8
-    """
 
     clouds = record.get("clouds", [])
 
@@ -396,7 +376,6 @@ def metar_cloud(record):
                 except Exception:
                     pass
 
-    # cloudsが取れない場合raw METARを解析
     if not clouds:
 
         raw = (
@@ -439,13 +418,10 @@ def metar_cloud(record):
                         if (
                             lowest_base_ft is None
                             or
-                            base_ft <
-                            lowest_base_ft
+                            base_ft < lowest_base_ft
                         ):
 
-                            lowest_base_ft = (
-                                base_ft
-                            )
+                            lowest_base_ft = base_ft
 
     if lowest_base_ft is None:
 
@@ -477,7 +453,6 @@ if not metars:
     )
 
 
-# 時刻順に並べる
 metars = sorted(
     metars,
     key=lambda r:
@@ -518,6 +493,7 @@ if (
     or dewpoint is None
     or pressure is None
 ):
+
     raise RuntimeError(
         "METARの気温・露点・気圧を解析できませんでした"
     )
@@ -538,10 +514,8 @@ wind_direction = wind_dir_jp(
 )
 
 
-cloud_cover_okta, cloud_base_km = (
-    metar_cloud(
-        latest_metar
-    )
+cloud_cover_okta, cloud_base_km = metar_cloud(
+    latest_metar
 )
 
 
@@ -605,11 +579,9 @@ pressure_3h = nearest_metar_pressure(
 
 
 if pressure_24h is None:
-
     pressure_24h = pressure
 
 if pressure_3h is None:
-
     pressure_3h = pressure
 
 
@@ -764,22 +736,43 @@ else:
 
 
 # =========================================================
-# 降水確率
+# 今日の降水確率
+# 06〜21時の時間別予報の最大値を採用
 # =========================================================
 
-if daily:
+today_pops = []
 
-    today_pop = daily[0].get(
-        "pop",
-        0
+for h in hourly:
+
+    dt = ow_local_datetime(
+        h["dt"]
     )
 
-    pop = str(
-        int(
-            round(
-                float(today_pop)
-                * 100
+    if (
+        dt.date() == today
+        and 6 <= dt.hour <= 21
+    ):
+
+        today_pops.append(
+            int(
+                round(
+                    float(
+                        h.get(
+                            "pop",
+                            0
+                        )
+                    )
+                    * 100
+                )
             )
+        )
+
+
+if today_pops:
+
+    pop = str(
+        max(
+            today_pops
         )
     )
 
@@ -855,9 +848,7 @@ def dominant_weather(
         if (
             dt.date() == today
             and
-            start_hour
-            <= dt.hour
-            <= end_hour
+            start_hour <= dt.hour <= end_hour
         ):
 
             labels.append(
@@ -870,7 +861,6 @@ def dominant_weather(
             )
 
     if not labels:
-
         return "予報なし"
 
     return Counter(
@@ -878,18 +868,14 @@ def dominant_weather(
     ).most_common(1)[0][0]
 
 
-morning_weather = (
-    dominant_weather(
-        6,
-        11
-    )
+morning_weather = dominant_weather(
+    6,
+    11
 )
 
-afternoon_weather = (
-    dominant_weather(
-        12,
-        17
-    )
+afternoon_weather = dominant_weather(
+    12,
+    17
 )
 
 
@@ -900,8 +886,6 @@ afternoon_weather = (
 def hourly_value(
     target_hour
 ):
-
-    candidates = []
 
     for h in hourly:
 
@@ -953,8 +937,8 @@ hour_repl = {}
 
 for h in hours:
 
-    h_temp, h_pop = (
-        hourly_value(h)
+    h_temp, h_pop = hourly_value(
+        h
     )
 
     if h_temp is None:
@@ -1106,9 +1090,7 @@ replacements.update(
 html = template
 
 
-for key, value in (
-    replacements.items()
-):
+for key, value in replacements.items():
 
     html = html.replace(
         key,
