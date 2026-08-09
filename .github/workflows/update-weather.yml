@@ -1,6 +1,6 @@
 name: Update weather
 
-on:
+'on':
   workflow_dispatch:
   schedule:
     - cron: "0 21 * * *"
