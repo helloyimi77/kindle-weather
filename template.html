@@ -3,7 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="refresh" content="480">
 <title>東京 気象板</title>
+
 <style>
   html, body {
     margin: 0;
@@ -12,49 +14,60 @@
     color: #000;
     font-family: serif;
   }
+
   body {
     text-align: center;
     padding: 18px 14px 24px;
   }
+
   .place {
     font-size: 30px;
     margin: 0 0 5px;
   }
+
   .updated {
     font-size: 16px;
     margin-bottom: 14px;
   }
+
   .pressure {
     font-size: 64px;
     font-weight: bold;
     line-height: 1.05;
     margin: 6px 0 4px;
   }
+
   .pressure .unit {
     font-size: 26px;
   }
+
   .delta {
     font-size: 24px;
     margin: 8px 0 5px;
   }
+
   .delta-sub {
     font-size: 16px;
     margin: 0 0 18px;
   }
+
   .current {
     font-size: 25px;
     margin: 8px 0 18px;
   }
+
   .rule {
     border-top: 2px solid #000;
     margin: 0 0 17px;
   }
+
   .forecast {
     font-size: 27px;
     font-weight: bold;
     line-height: 1.6;
     margin-bottom: 10px;
   }
+
   .info {
     display: table;
     width: 100%;
@@ -62,68 +75,83 @@
     font-size: 22px;
     line-height: 1.7;
   }
+
   .info-row {
     display: table-row;
   }
+
   .info-cell {
     display: table-cell;
     width: 50%;
     vertical-align: middle;
   }
+
   .rain {
     font-size: 25px;
     margin: 6px 0 3px;
   }
+
   .wind {
     font-size: 24px;
     margin-top: 4px;
   }
 </style>
-  <script>
-(function () {
-  const now = new Date();
-
-  // 次の00分（1:00、2:00、3:00...）
-  const next = new Date(now);
-  next.setHours(now.getHours() + 1);
-  next.setMinutes(0);
-  next.setSeconds(0);
-  next.setMilliseconds(0);
-
-  const wait = next - now;
-
-  setTimeout(function () {
-    location.reload();
-  }, wait);
-})();
-</script>
 </head>
+
 <body>
+
   <div class="place">東京</div>
-  <div class="updated">{{UPDATED}}</div>
 
-  <div class="pressure">{{PRESSURE}} <span class="unit">hPa</span></div>
-  <div class="delta">{{PRESSURE_ARROW}} {{PRESSURE_DELTA}} hPa / 24h</div>
-  <div class="delta-sub">24時間前 {{PRESSURE_24H_AGO}} hPa</div>
+  <div class="updated">
+    {{UPDATED}}
+  </div>
 
-  <div class="current">現在 {{TEMP}} ℃　　湿度 {{HUMIDITY}} %</div>
+  <div class="pressure">
+    {{PRESSURE}}
+    <span class="unit">hPa</span>
+  </div>
+
+  <div class="delta">
+    {{PRESSURE_ARROW}}
+    {{PRESSURE_DELTA}}
+    hPa / 24h
+  </div>
+
+  <div class="delta-sub">
+    24時間前 {{PRESSURE_24H_AGO}} hPa
+  </div>
+
+  <div class="current">
+    現在 {{TEMP}} ℃　　湿度 {{HUMIDITY}} %
+  </div>
 
   <div class="rule"></div>
 
   <div class="forecast">
-    今日 ↑{{TODAY_HIGH}} ℃（{{TODAY_HIGH_TIME}}頃）<br>
+    今日 ↑{{TODAY_HIGH}} ℃（{{TODAY_HIGH_TIME}}頃）
+    <br>
     明朝 ↓{{TOMORROW_LOW}} ℃（{{TOMORROW_LOW_TIME}}頃）
   </div>
 
-  <div class="rain">降水確率 {{POP}} %</div>
+  <div class="rain">
+    降水確率 {{POP}} %
+  </div>
 
   <div class="info">
     <div class="info-row">
-      <div class="info-cell">日の出 {{SUNRISE}}</div>
-      <div class="info-cell">日の入 {{SUNSET}}</div>
+      <div class="info-cell">
+        日の出 {{SUNRISE}}
+      </div>
+
+      <div class="info-cell">
+        日の入 {{SUNSET}}
+      </div>
     </div>
   </div>
 
-  <div class="wind">{{WIND_DIR}} {{WIND_SPEED}} m/s</div>
+  <div class="wind">
+    {{WIND_DIR}} {{WIND_SPEED}} m/s
+  </div>
+
 </body>
 </html>
