@@ -1104,3 +1104,48 @@ Path(
     html,
     encoding="utf-8"
 )
+
+# =========================================================
+# Scriptable用 JSON
+# =========================================================
+
+weather_json = {
+    "updated": updated,
+
+    "pressure": round(pressure, 1),
+    "pressure_delta_24h": round(delta24, 1),
+
+    "temperature": round(temp, 1),
+    "humidity": humidity,
+
+    "wind_direction_deg": wind_deg,
+    "wind_speed": round(wind_speed, 1),
+
+    "precipitation_probability": (
+        int(pop)
+        if pop != "--"
+        else None
+    ),
+
+    "cloud_okta": cloud_cover_okta,
+
+    "dewpoint": round(dewpoint, 1),
+
+    "cloud_base_km": (
+        round(cloud_base_km, 1)
+        if cloud_base_km is not None
+        else None
+    )
+}
+
+
+Path(
+    "weather.json"
+).write_text(
+    json.dumps(
+        weather_json,
+        ensure_ascii=False,
+        indent=2
+    ),
+    encoding="utf-8"
+)
