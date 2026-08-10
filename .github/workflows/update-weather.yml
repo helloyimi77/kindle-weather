@@ -3,7 +3,7 @@ name: Update weather
 'on':
   workflow_dispatch:
   schedule:
-    - cron: "0 21 * * *"  # 毎日06:00 JST
+    - cron: "0,30 * * * *"  # 30分ごと
 
 permissions:
   contents: write
