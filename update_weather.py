@@ -4,8 +4,10 @@ from collections import Counter
 import json
 import math
 import os
-import urllib.request
+import time
+import urllib.error
 import urllib.parse
+import urllib.request
 
 
 JST = timezone(timedelta(hours=9))
@@ -25,22 +27,51 @@ OPENWEATHER_API_KEY = os.environ["OPENWEATHER_API_KEY"]
 # HTTP
 # =========================================================
 
-def fetch_json(url, user_agent="kindle-weather/5.0"):
+def fetch_json(
+    url,
+    user_agent="kindle-weather/5.0",
+    retries=3,
+    wait_seconds=10
+):
 
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": user_agent,
-            "Accept": "application/json"
-        }
-    )
+    last_error = None
 
-    with urllib.request.urlopen(
-        req,
-        timeout=30
-    ) as r:
+    for attempt in range(1, retries + 1):
 
-        return json.load(r)
+        try:
+
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": user_agent,
+                    "Accept": "application/json"
+                }
+            )
+
+            with urllib.request.urlopen(
+                req,
+                timeout=30
+            ) as r:
+
+                return json.load(r)
+
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            TimeoutError
+        ) as e:
+
+            last_error = e
+
+            print(
+                f"HTTP取得失敗 "
+                f"{attempt}/{retries}: {e}"
+            )
+
+            if attempt < retries:
+                time.sleep(wait_seconds)
+
+    raise last_error
 
 
 # =========================================================
@@ -249,7 +280,6 @@ def metar_temperature(record):
     ):
 
         if record.get(key) is not None:
-
             return float(
                 record[key]
             )
@@ -266,7 +296,6 @@ def metar_dewpoint(record):
     ):
 
         if record.get(key) is not None:
-
             return float(
                 record[key]
             )
@@ -290,11 +319,13 @@ def metar_wind(record):
 
         try:
             direction = float(wdir)
+
         except Exception:
             direction = None
 
     try:
         speed_knots = float(wspd)
+
     except Exception:
         speed_knots = 0.0
 
@@ -370,7 +401,6 @@ def metar_cloud(record):
                         lowest_base_ft is None
                         or base < lowest_base_ft
                     ):
-
                         lowest_base_ft = base
 
                 except Exception:
@@ -420,7 +450,6 @@ def metar_cloud(record):
                             or
                             base_ft < lowest_base_ft
                         ):
-
                             lowest_base_ft = base_ft
 
     if lowest_base_ft is None:
@@ -445,12 +474,32 @@ def metar_cloud(record):
 # METAR実況取得
 # =========================================================
 
-metars = fetch_metar(25)
+try:
+
+    metars = fetch_metar(25)
+
+except Exception as e:
+
+    print(
+        "METAR取得に失敗しました。"
+        "前回の index.html / weather.json を維持します。"
+    )
+
+    print(
+        f"エラー: {e}"
+    )
+
+    raise SystemExit(0)
+
 
 if not metars:
-    raise RuntimeError(
-        "RJTT METARを取得できませんでした"
+
+    print(
+        "METARデータが空でした。"
+        "前回の表示を維持します。"
     )
+
+    raise SystemExit(0)
 
 
 metars = sorted(
@@ -488,15 +537,19 @@ pressure = metar_pressure(
     latest_metar
 )
 
+
 if (
     temp is None
     or dewpoint is None
     or pressure is None
 ):
 
-    raise RuntimeError(
-        "METARの気温・露点・気圧を解析できませんでした"
+    print(
+        "METARの解析に失敗しました。"
+        "前回の表示を維持します。"
     )
+
+    raise SystemExit(0)
 
 
 humidity = relative_humidity(
@@ -600,7 +653,23 @@ delta3 = (
 # OpenWeather予報
 # =========================================================
 
-ow = fetch_openweather()
+try:
+
+    ow = fetch_openweather()
+
+except Exception as e:
+
+    print(
+        "OpenWeather取得に失敗しました。"
+        "前回の index.html / weather.json を維持します。"
+    )
+
+    print(
+        f"エラー: {e}"
+    )
+
+    raise SystemExit(0)
+
 
 timezone_offset = int(
     ow.get(
@@ -679,12 +748,17 @@ if today_points:
         key=lambda x: x[1]
     )
 
-else:
+elif daily:
 
     today_high = float(
         daily[0]["temp"]["max"]
     )
 
+    high_dt = now_local
+
+else:
+
+    today_high = temp
     high_dt = now_local
 
 
@@ -723,7 +797,7 @@ if tomorrow_morning:
         key=lambda x: x[1]
     )
 
-else:
+elif len(daily) > 1:
 
     tomorrow_low = float(
         daily[1]["temp"]["min"]
@@ -734,10 +808,19 @@ else:
         timedelta(days=1)
     )
 
+else:
+
+    tomorrow_low = temp
+
+    low_dt = (
+        now_local +
+        timedelta(days=1)
+    )
+
 
 # =========================================================
 # 今日の降水確率
-# 06〜21時の時間別予報の最大値を採用
+# 06〜21時の時間別予報の最大値
 # =========================================================
 
 today_pops = []
@@ -750,7 +833,8 @@ for h in hourly:
 
     if (
         dt.date() == today
-        and 6 <= dt.hour <= 21
+        and
+        6 <= dt.hour <= 21
     ):
 
         today_pops.append(
@@ -1105,37 +1189,71 @@ Path(
     encoding="utf-8"
 )
 
+
 # =========================================================
 # Scriptable用 JSON
 # =========================================================
 
 weather_json = {
-    "updated": updated,
 
-    "pressure": round(pressure, 1),
-    "pressure_delta_24h": round(delta24, 1),
+    "updated":
+        updated,
 
-    "temperature": round(temp, 1),
-    "humidity": humidity,
+    "pressure":
+        round(
+            pressure,
+            1
+        ),
 
-    "wind_direction_deg": wind_deg,
-    "wind_speed": round(wind_speed, 1),
+    "pressure_delta_24h":
+        round(
+            delta24,
+            1
+        ),
 
-    "precipitation_probability": (
-        int(pop)
-        if pop != "--"
-        else None
-    ),
+    "temperature":
+        round(
+            temp,
+            1
+        ),
 
-    "cloud_okta": cloud_cover_okta,
+    "humidity":
+        humidity,
 
-    "dewpoint": round(dewpoint, 1),
+    "wind_direction_deg":
+        wind_deg,
 
-    "cloud_base_km": (
-        round(cloud_base_km, 1)
-        if cloud_base_km is not None
-        else None
-    )
+    "wind_speed":
+        round(
+            wind_speed,
+            1
+        ),
+
+    "precipitation_probability":
+        (
+            int(pop)
+            if pop != "--"
+            else None
+        ),
+
+    "cloud_okta":
+        cloud_cover_okta,
+
+    "dewpoint":
+        round(
+            dewpoint,
+            1
+        ),
+
+    "cloud_base_km":
+        (
+            round(
+                cloud_base_km,
+                1
+            )
+            if cloud_base_km is not None
+            else None
+        )
 }
 
 
@@ -1148,4 +1266,9 @@ Path(
         indent=2
     ),
     encoding="utf-8"
+)
+
+
+print(
+    f"更新完了: {updated}"
 )
