@@ -1,13 +1,13 @@
 {
-  "updated": "2026年08月11日 20:22 更新",
+  "updated": "2026年08月11日 21:02 更新",
   "pressure": 994.0,
   "pressure_delta_24h": -13.0,
   "temperature": 23.0,
-  "humidity": 83,
-  "wind_direction_deg": 310.0,
-  "wind_speed": 11.3,
+  "humidity": 89,
+  "wind_direction_deg": 280.0,
+  "wind_speed": 7.7,
   "precipitation_probability": 100,
   "cloud_okta": 7,
-  "dewpoint": 20.0,
+  "dewpoint": 21.0,
   "cloud_base_km": 0.5
 }
