@@ -2,8 +2,8 @@ name: Update weather
 
 'on':
   workflow_dispatch:
-  schedule:
-    - cron: "15,45 * * * *"  # 30分ごと
+　schedule:
+  - cron: "5,15,25,35,45,55 * * * *"
 
 permissions:
   contents: write
