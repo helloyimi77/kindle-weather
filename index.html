@@ -3,187 +3,394 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <meta http-equiv="refresh" content="480">
+
 <title>羽田空港 気象板</title>
 
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: #fff;
-    color: #000;
-    font-family: serif;
-  }
 
-  body {
-    text-align: center;
-    padding: 14px 12px 18px;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  color: #000;
+  font-family: serif;
+}
 
-  .place {
-    font-size: 30px;
-    margin: 0 0 3px;
-  }
+body {
+  text-align: center;
+  padding: 12px 12px 16px;
+}
 
-  .updated {
-    font-size: 15px;
-    margin-bottom: 10px;
-  }
+/* ==============================
+   タイトル
+   ============================== */
 
-  .pressure {
-    font-size: 60px;
-    font-weight: bold;
-    line-height: 1.03;
-    margin: 4px 0 3px;
-  }
+.place {
+  font-size: 29px;
+  margin: 0 0 2px;
+}
 
-  .pressure .unit {
-    font-size: 24px;
-  }
+.updated {
+  font-size: 14px;
+  margin-bottom: 7px;
+}
 
-  .delta {
-    font-size: 22px;
-    margin: 6px 0 3px;
-  }
 
-  .delta-sub {
-    font-size: 15px;
-    margin: 0 0 12px;
-  }
+/* ==============================
+   上段
+   天気 ｜ 気圧 ｜ 風
+   ============================== */
 
-  .current {
-    font-size: 24px;
-    margin: 6px 0 12px;
-  }
+.main-panel {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+  margin: 2px 0 8px;
+}
 
-  .rule {
-    border-top: 2px solid #000;
-    margin: 0 0 11px;
-  }
+.main-cell {
+  display: table-cell;
+  vertical-align: middle;
+}
 
-  .forecast {
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 1.45;
-    margin-bottom: 5px;
-  }
 
-  .rain {
-    font-size: 22px;
-    margin: 3px 0 8px;
-  }
+/* 左：現在天気 */
 
-  .sky {
-    font-size: 18px;
-    line-height: 1.5;
-    margin: 6px 0;
-  }
+.weather-cell {
+  width: 25%;
+}
 
-  .wind {
-    font-size: 21px;
-    margin-top: 4px;
-    margin-bottom: 6px;
-  }
+.weather-icon {
+  font-size: 52px;
+  line-height: 1.0;
+  margin-bottom: 3px;
+}
 
-  .trend-title {
-    margin: 12px 0 6px;
-    font-size: 19px;
-    font-weight: bold;
-  }
+.weather-text {
+  font-size: 20px;
+  font-weight: bold;
+}
 
-  .trend {
-    font-size: 21px;
-    line-height: 1.6;
-    margin-bottom: 10px;
-  }
 
-  .hourly {
-    width: 100%;
-    margin: 0 auto;
-    border-collapse: collapse;
-    font-size: 20px;
-    line-height: 1.6;
-  }
+/* 中央：気圧 */
 
-  .hourly td {
-    width: 50%;
-    padding: 4px 6px;
-    text-align: center;
-    white-space: nowrap;
-  }
+.pressure-cell {
+  width: 50%;
+}
+
+.pressure {
+  font-size: 58px;
+  font-weight: bold;
+  line-height: 1.03;
+  white-space: nowrap;
+}
+
+.pressure .unit {
+  font-size: 23px;
+}
+
+.delta {
+  font-size: 21px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+
+.delta-sub {
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+
+/* 右：風 */
+
+.wind-cell {
+  width: 25%;
+}
+
+.wind-arrow {
+  font-size: 52px;
+  font-weight: bold;
+  line-height: 0.95;
+}
+
+.wind-speed {
+  font-size: 21px;
+  font-weight: bold;
+  margin-top: 3px;
+}
+
+.wind-direction {
+  font-size: 19px;
+  margin-top: 2px;
+}
+
+
+/* ==============================
+   現在気温など
+   ============================== */
+
+.current {
+  font-size: 23px;
+  margin: 5px 0 7px;
+}
+
+.sky {
+  font-size: 17px;
+  margin: 3px 0 8px;
+}
+
+
+/* ==============================
+   区切り線
+   ============================== */
+
+.rule {
+  border-top: 2px solid #000;
+  margin: 5px 0 9px;
+}
+
+
+/* ==============================
+   最高・最低
+   ============================== */
+
+.forecast {
+  font-size: 23px;
+  font-weight: bold;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+
+.rain {
+  font-size: 21px;
+  margin: 2px 0 4px;
+}
+
+
+/* ==============================
+   今日の傾向
+   ============================== */
+
+.trend-title {
+  margin: 7px 0 3px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.trend {
+  font-size: 19px;
+  line-height: 1.4;
+  margin-bottom: 5px;
+}
+
+
+/* ==============================
+   時間別
+   ============================== */
+
+.hourly {
+  width: 100%;
+  margin: 0 auto;
+  border-collapse: collapse;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.hourly td {
+  width: 50%;
+  padding: 2px 4px;
+  text-align: center;
+  white-space: nowrap;
+}
+
 </style>
 </head>
 
+
 <body>
 
-  <div class="place">東京 羽田</div>
+<div class="place">
+  羽田空港
+</div>
 
-  <div class="updated">
-    2026年08月11日 22:24 更新
+<div class="updated">
+  2026年08月11日 23:22 更新
+</div>
+
+
+<!-- ==============================
+     上段
+     ============================== -->
+
+<div class="main-panel">
+
+  <!-- 左：現在天気 -->
+
+  <div class="main-cell weather-cell">
+
+    <div class="weather-icon">
+      ☂
+    </div>
+
+    <div class="weather-text">
+      雨
+    </div>
+
   </div>
 
-  <div class="pressure">
-    993.0
-    <span class="unit">hPa</span>
+
+  <!-- 中央：気圧 -->
+
+  <div class="main-cell pressure-cell">
+
+    <div class="pressure">
+      995.0
+      <span class="unit">hPa</span>
+    </div>
+
+    <div class="delta">
+      ↘ -12.0 hPa / 24h
+    </div>
+
+    <div class="delta-sub">
+      24時間前 1007.0 hPa
+    </div>
+
   </div>
 
-  <div class="delta">
-    ↘ -14.0 hPa / 24h
+
+  <!-- 右：風 -->
+
+  <div class="main-cell wind-cell">
+
+    <div class="wind-arrow">
+      ↑
+    </div>
+
+    <div class="wind-speed">
+      9.8 m/s
+    </div>
+
+    <div class="wind-direction">
+      南
+    </div>
+
   </div>
 
-  <div class="delta-sub">
-    24時間前 1007.0 hPa
-  </div>
+</div>
 
-  <div class="current">
-    現在 23.0 ℃　　湿度 94 %
-  </div>
 
-  <div class="rule"></div>
+<!-- ==============================
+     現在値
+     ============================== -->
 
-  <div class="forecast">
-    今日 ↑23 ℃（23時頃）<br>
-    明朝 ↓23 ℃（00時頃）
-  </div>
+<div class="current">
+  現在 24.0 ℃　湿度 89 %
+</div>
 
-  <div class="rain">
-    降水確率 -- %
-  </div>
+<div class="sky">
+  雲量 7/8　
+  雲底 0.3 km　
+  露点 22.0 ℃
+</div>
 
-  <div class="sky">
-    雲量 7/8　　雲底 0.2km　　露点 22.0℃
-  </div>
 
-  <div class="wind">
-    南西 9.3 m/s
-  </div>
+<div class="rule"></div>
 
-  <div class="trend-title">
-    ──── 今日の傾向 ────
-  </div>
 
-  <div class="trend">
-    午前：予報なし<br>
-    午後：予報なし<br>
-    気圧：下降傾向
-  </div>
+<!-- ==============================
+     予報
+     ============================== -->
 
-  <table class="hourly">
-    <tr>
-      <td>06時 --℃ --%</td>
-      <td>09時 --℃ --%</td>
-    </tr>
+<div class="forecast">
 
-    <tr>
-      <td>12時 --℃ --%</td>
-      <td>15時 --℃ --%</td>
-    </tr>
+  今日 ↑24 ℃
+  （23時頃）
 
-    <tr>
-      <td>18時 --℃ --%</td>
-      <td>21時 --℃ --%</td>
-    </tr>
-  </table>
+  <br>
+
+  明朝 ↓23 ℃
+  （07時頃）
+
+</div>
+
+
+<div class="rain">
+  降水確率 -- %
+</div>
+
+
+<!-- ==============================
+     今日の傾向
+     ============================== -->
+
+<div class="trend-title">
+  ──── 今日の傾向 ────
+</div>
+
+<div class="trend">
+
+  午前：予報なし
+
+  <br>
+
+  午後：予報なし
+
+  <br>
+
+  気圧：上昇傾向
+
+</div>
+
+
+<!-- ==============================
+     時間別
+     ============================== -->
+
+<table class="hourly">
+
+  <tr>
+
+    <td>
+      06時 --℃ --%
+    </td>
+
+    <td>
+      09時 --℃ --%
+    </td>
+
+  </tr>
+
+
+  <tr>
+
+    <td>
+      12時 --℃ --%
+    </td>
+
+    <td>
+      15時 --℃ --%
+    </td>
+
+  </tr>
+
+
+  <tr>
+
+    <td>
+      18時 --℃ --%
+    </td>
+
+    <td>
+      21時 --℃ --%
+    </td>
+
+  </tr>
+
+</table>
+
 
 </body>
 </html>
