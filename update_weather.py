@@ -134,19 +134,63 @@ def wind_dir_jp(deg):
     if deg is None:
         return "静穏"
 
+    # 16方位
     names = [
         "北",
+        "北北東",
         "北東",
+        "東北東",
         "東",
+        "東南東",
         "南東",
+        "南南東",
         "南",
+        "南南西",
         "南西",
+        "西南西",
         "西",
-        "北西"
+        "西北西",
+        "北西",
+        "北北西"
     ]
 
     return names[
-        int((float(deg) + 22.5) // 45) % 8
+        int((float(deg) + 11.25) // 22.5) % 16
+    ]
+
+
+def wind_flow_arrow(deg):
+    """
+    METARの風向は「どこから吹くか」。
+
+    画面上の矢印は
+    「風がどちらへ吹いていくか」
+    を表示する。
+
+    例：
+    南南西の風 → 北北東方向 → ↗
+    """
+
+    if deg is None:
+        return "・"
+
+    flow_deg = (
+        float(deg) + 180
+    ) % 360
+
+    arrows = [
+        "↑",
+        "↗",
+        "→",
+        "↘",
+        "↓",
+        "↙",
+        "←",
+        "↖"
+    ]
+
+    return arrows[
+        int((flow_deg + 22.5) // 45) % 8
     ]
 
 
@@ -233,6 +277,7 @@ def metar_timestamp(record):
             continue
 
         if isinstance(value, (int, float)):
+
             return datetime.fromtimestamp(
                 value,
                 tz=timezone.utc
@@ -280,6 +325,7 @@ def metar_temperature(record):
     ):
 
         if record.get(key) is not None:
+
             return float(
                 record[key]
             )
@@ -296,6 +342,7 @@ def metar_dewpoint(record):
     ):
 
         if record.get(key) is not None:
+
             return float(
                 record[key]
             )
@@ -313,6 +360,7 @@ def metar_wind(record):
         "VAR",
         None
     ):
+
         direction = None
 
     else:
@@ -324,11 +372,14 @@ def metar_wind(record):
             direction = None
 
     try:
+
         speed_knots = float(wspd)
 
     except Exception:
+
         speed_knots = 0.0
 
+    # knot → m/s
     speed_ms = (
         speed_knots *
         0.514444
@@ -342,7 +393,10 @@ def metar_wind(record):
 
 def metar_cloud(record):
 
-    clouds = record.get("clouds", [])
+    clouds = record.get(
+        "clouds",
+        []
+    )
 
     coverage_map = {
         "SKC": 0,
@@ -359,7 +413,10 @@ def metar_cloud(record):
     max_okta = 0
     lowest_base_ft = None
 
-    if isinstance(clouds, list):
+    if isinstance(
+        clouds,
+        list
+    ):
 
         for cloud in clouds:
 
@@ -399,13 +456,16 @@ def metar_cloud(record):
 
                     if (
                         lowest_base_ft is None
-                        or base < lowest_base_ft
+                        or
+                        base < lowest_base_ft
                     ):
+
                         lowest_base_ft = base
 
                 except Exception:
                     pass
 
+    # cloudsが無い場合はraw METARから拾う
     if not clouds:
 
         raw = (
@@ -426,7 +486,9 @@ def metar_cloud(record):
                 ("VV", 8)
             ):
 
-                if token.startswith(code):
+                if token.startswith(
+                    code
+                ):
 
                     max_okta = max(
                         max_okta,
@@ -448,9 +510,13 @@ def metar_cloud(record):
                         if (
                             lowest_base_ft is None
                             or
-                            base_ft < lowest_base_ft
+                            base_ft <
+                            lowest_base_ft
                         ):
-                            lowest_base_ft = base_ft
+
+                            lowest_base_ft = (
+                                base_ft
+                            )
 
     if lowest_base_ft is None:
 
@@ -467,6 +533,106 @@ def metar_cloud(record):
     return (
         max_okta,
         base_km
+    )
+
+
+# =========================================================
+# 現在天気
+# =========================================================
+
+def metar_current_weather(
+    record,
+    cloud_okta
+):
+    """
+    METARの現象コードを優先。
+    現象コードがなければ雲量から推定。
+    """
+
+    raw = (
+        record.get("rawOb")
+        or record.get("raw")
+        or ""
+    ).upper()
+
+    # 雷
+    if "TS" in raw:
+
+        return (
+            "⚡",
+            "雷雨"
+        )
+
+    # 雪
+    if any(
+        code in raw
+        for code in (
+            "SN",
+            "SG",
+            "IC",
+            "PL"
+        )
+    ):
+
+        return (
+            "❄",
+            "雪"
+        )
+
+    # 雨
+    if any(
+        code in raw
+        for code in (
+            "RA",
+            "DZ",
+            "SHRA"
+        )
+    ):
+
+        return (
+            "☂",
+            "雨"
+        )
+
+    # 霧・もや
+    if any(
+        code in raw
+        for code in (
+            "FG",
+            "BR"
+        )
+    ):
+
+        return (
+            "≋",
+            "霧"
+        )
+
+    # 現象がなければ雲量
+    if cloud_okta <= 1:
+
+        return (
+            "☀",
+            "晴れ"
+        )
+
+    if cloud_okta <= 4:
+
+        return (
+            "☀",
+            "晴れ"
+        )
+
+    if cloud_okta <= 7:
+
+        return (
+            "☁",
+            "くもり"
+        )
+
+    return (
+        "☁",
+        "くもり"
     )
 
 
@@ -566,9 +732,23 @@ wind_direction = wind_dir_jp(
     wind_deg
 )
 
+wind_arrow = wind_flow_arrow(
+    wind_deg
+)
 
-cloud_cover_okta, cloud_base_km = metar_cloud(
-    latest_metar
+
+cloud_cover_okta, cloud_base_km = (
+    metar_cloud(
+        latest_metar
+    )
+)
+
+
+current_icon, current_weather = (
+    metar_current_weather(
+        latest_metar,
+        cloud_cover_okta
+    )
 )
 
 
@@ -681,11 +861,15 @@ timezone_offset = int(
 
 def ow_local_datetime(timestamp):
 
-    return datetime.fromtimestamp(
-        timestamp,
-        timezone.utc
-    ) + timedelta(
-        seconds=timezone_offset
+    return (
+        datetime.fromtimestamp(
+            timestamp,
+            timezone.utc
+        )
+        +
+        timedelta(
+            seconds=timezone_offset
+        )
     )
 
 
@@ -693,7 +877,8 @@ now_local = (
     datetime.now(
         timezone.utc
     )
-    + timedelta(
+    +
+    timedelta(
         seconds=timezone_offset
     )
 )
@@ -820,7 +1005,7 @@ else:
 
 # =========================================================
 # 今日の降水確率
-# 06〜21時の時間別予報の最大値
+# 06〜21時の最大値
 # =========================================================
 
 today_pops = []
@@ -1095,6 +1280,12 @@ replacements = {
     "{{UPDATED}}":
         updated,
 
+    "{{CURRENT_ICON}}":
+        current_icon,
+
+    "{{CURRENT_WEATHER}}":
+        current_weather,
+
     "{{PRESSURE}}":
         f"{pressure:.1f}",
 
@@ -1135,6 +1326,9 @@ replacements = {
 
     "{{POP}}":
         pop,
+
+    "{{WIND_ARROW}}":
+        wind_arrow,
 
     "{{WIND_DIR}}":
         wind_direction,
@@ -1199,6 +1393,12 @@ weather_json = {
     "updated":
         updated,
 
+    "current_icon":
+        current_icon,
+
+    "current_weather":
+        current_weather,
+
     "pressure":
         round(
             pressure,
@@ -1222,6 +1422,12 @@ weather_json = {
 
     "wind_direction_deg":
         wind_deg,
+
+    "wind_direction":
+        wind_direction,
+
+    "wind_arrow":
+        wind_arrow,
 
     "wind_speed":
         round(
@@ -1271,4 +1477,12 @@ Path(
 
 print(
     f"更新完了: {updated}"
+)
+
+print(
+    f"現在天気: {current_icon} {current_weather}"
+)
+
+print(
+    f"風: {wind_arrow} {wind_speed:.1f}m/s ({wind_direction})"
 )
