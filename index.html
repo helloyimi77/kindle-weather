@@ -214,13 +214,13 @@ body {
   ・ページ全体をreloadしない
   ・10分ごとに裏で最新版HTMLを取得
   ・取得成功時だけbodyを書き換える
-  ・通信失敗時は現在画面をそのまま維持
+  ・通信失敗時は現在表示を維持
 */
 
 (function () {
 
   var UPDATE_INTERVAL =
-    10 * 60 * 1000;   // 10分
+    10 * 60 * 1000;
 
   function updateWeather() {
 
@@ -230,7 +230,7 @@ body {
         new XMLHttpRequest();
 
       /*
-        キャッシュ回避用に時刻を付加
+        キャッシュ回避
       */
       var url =
         window.location.pathname +
@@ -247,14 +247,14 @@ body {
         function () {
 
           /*
-            通信完了まで何もしない
+            通信完了まで待つ
           */
           if (xhr.readyState !== 4) {
             return;
           }
 
           /*
-            成功した場合だけ更新
+            HTTP成功時だけ処理
           */
           if (
             xhr.status >= 200 &&
@@ -264,33 +264,83 @@ body {
 
             try {
 
+              var html =
+                xhr.responseText;
+
               /*
-                最新HTMLからbody部分だけ取り出す
+                JavaScript自身の文字列を
+                bodyタグと誤認しないよう、
+                "<body" を直接ソースに書かない
               */
-              var match =
-                xhr.responseText.match(
-                  /<body[^>]*>([\s\S]*?)<\/body>/i
+
+              var bodyStartTag =
+                "<" + "body";
+
+              var bodyEndTag =
+                "</" + "body>";
+
+              var lowerHtml =
+                html.toLowerCase();
+
+              var start =
+                lowerHtml.indexOf(
+                  bodyStartTag
+                );
+
+              if (start < 0) {
+                return;
+              }
+
+              /*
+                開始bodyタグの > を探す
+              */
+              start =
+                html.indexOf(
+                  ">",
+                  start
+                );
+
+              if (start < 0) {
+                return;
+              }
+
+              start += 1;
+
+              /*
+                最後のbody終了タグを探す
+              */
+              var end =
+                lowerHtml.lastIndexOf(
+                  bodyEndTag
                 );
 
               if (
-                match &&
-                match[1]
+                end < 0 ||
+                end <= start
               ) {
-
-                /*
-                  現在ページは移動せず、
-                  画面内容だけ最新版へ交換
-                */
-                document.body.innerHTML =
-                  match[1];
-
+                return;
               }
+
+              /*
+                body内部だけ取得
+              */
+              var newBody =
+                html.substring(
+                  start,
+                  end
+                );
+
+              /*
+                成功した場合だけ画面更新
+              */
+              document.body.innerHTML =
+                newBody;
 
             } catch (e) {
 
               /*
-                HTML解析失敗時も
-                現在画面をそのまま維持
+                HTML解析失敗時は
+                現在表示をそのまま維持
               */
 
             }
@@ -300,6 +350,7 @@ body {
           /*
             404 / 500 / 504 / Wi-Fi切断などは
             何もしない。
+
             次の10分後に再試行。
           */
 
@@ -311,7 +362,7 @@ body {
 
       /*
         通信開始自体に失敗しても
-        現在画面を維持
+        現在表示をそのまま維持
       */
 
     }
@@ -320,7 +371,7 @@ body {
 
 
   /*
-    10分ごとに繰り返し
+    10分ごとに再取得
   */
   setInterval(
     updateWeather,
@@ -341,7 +392,7 @@ body {
 </div>
 
 <div class="updated">
-  2026年08月18日 14:48 更新
+  2026年08月18日 15:00 更新
 </div>
 
 
@@ -431,7 +482,7 @@ body {
 
 <div class="forecast">
 
-  今日 ↑32 ℃
+  今日 ↑30 ℃
   （15時頃）
 
   <br>
@@ -496,7 +547,7 @@ body {
     </td>
 
     <td>
-      15時 32℃ 28%
+      15時 30℃ 28%
     </td>
 
   </tr>
@@ -505,7 +556,7 @@ body {
   <tr>
 
     <td>
-      18時 30℃ 0%
+      18時 29℃ 0%
     </td>
 
     <td>
