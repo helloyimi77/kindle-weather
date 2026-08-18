@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<meta http-equiv="refresh" content="480">
-
 <title>東京　羽田 気象板</title>
 
 <style>
@@ -206,6 +204,133 @@ body {
 }
 
 </style>
+
+
+<script>
+
+/*
+  Kindle用 安全更新
+
+  ・ページ全体をreloadしない
+  ・10分ごとに裏で最新版HTMLを取得
+  ・取得成功時だけbodyを書き換える
+  ・通信失敗時は現在画面をそのまま維持
+*/
+
+(function () {
+
+  var UPDATE_INTERVAL =
+    10 * 60 * 1000;   // 10分
+
+  function updateWeather() {
+
+    try {
+
+      var xhr =
+        new XMLHttpRequest();
+
+      /*
+        キャッシュ回避用に時刻を付加
+      */
+      var url =
+        window.location.pathname +
+        "?kindle_update=" +
+        new Date().getTime();
+
+      xhr.open(
+        "GET",
+        url,
+        true
+      );
+
+      xhr.onreadystatechange =
+        function () {
+
+          /*
+            通信完了まで何もしない
+          */
+          if (xhr.readyState !== 4) {
+            return;
+          }
+
+          /*
+            成功した場合だけ更新
+          */
+          if (
+            xhr.status >= 200 &&
+            xhr.status < 300 &&
+            xhr.responseText
+          ) {
+
+            try {
+
+              /*
+                最新HTMLからbody部分だけ取り出す
+              */
+              var match =
+                xhr.responseText.match(
+                  /<body[^>]*>([\s\S]*?)<\/body>/i
+                );
+
+              if (
+                match &&
+                match[1]
+              ) {
+
+                /*
+                  現在ページは移動せず、
+                  画面内容だけ最新版へ交換
+                */
+                document.body.innerHTML =
+                  match[1];
+
+              }
+
+            } catch (e) {
+
+              /*
+                HTML解析失敗時も
+                現在画面をそのまま維持
+              */
+
+            }
+
+          }
+
+          /*
+            404 / 500 / 504 / Wi-Fi切断などは
+            何もしない。
+            次の10分後に再試行。
+          */
+
+        };
+
+      xhr.send(null);
+
+    } catch (e) {
+
+      /*
+        通信開始自体に失敗しても
+        現在画面を維持
+      */
+
+    }
+
+  }
+
+
+  /*
+    10分ごとに繰り返し
+  */
+  setInterval(
+    updateWeather,
+    UPDATE_INTERVAL
+  );
+
+})();
+
+</script>
+
 </head>
 
 
@@ -216,7 +341,7 @@ body {
 </div>
 
 <div class="updated">
-  2026年08月18日 11:02 更新
+  2026年08月18日 11:16 更新
 </div>
 
 
@@ -266,7 +391,7 @@ body {
   <div class="main-cell wind-cell">
 
     <div class="wind-arrow">
-      ↙
+      ↓
     </div>
 
     <div class="wind-speed">
@@ -274,7 +399,7 @@ body {
     </div>
 
     <div class="wind-direction">
-      北東
+      北北東
     </div>
 
   </div>
@@ -287,7 +412,7 @@ body {
      ============================== -->
 
 <div class="current">
-  現在 28.0 ℃　湿度 79 %
+  現在 29.0 ℃　湿度 74 %
 </div>
 
 <div class="sky">
@@ -367,7 +492,7 @@ body {
   <tr>
 
     <td>
-      12時 30℃ 0%
+      12時 29℃ 0%
     </td>
 
     <td>
