@@ -208,15 +208,6 @@ body {
 
 <script>
 
-/*
-  Kindle用 安全更新
-
-  ・ページ全体をreloadしない
-  ・10分ごとに裏で最新版HTMLを取得
-  ・取得成功時だけbodyを書き換える
-  ・通信失敗時は現在表示を維持
-*/
-
 (function () {
 
   var UPDATE_INTERVAL =
@@ -229,9 +220,6 @@ body {
       var xhr =
         new XMLHttpRequest();
 
-      /*
-        キャッシュ回避
-      */
       var url =
         window.location.pathname +
         "?kindle_update=" +
@@ -246,16 +234,10 @@ body {
       xhr.onreadystatechange =
         function () {
 
-          /*
-            通信完了まで待つ
-          */
           if (xhr.readyState !== 4) {
             return;
           }
 
-          /*
-            HTTP成功時だけ処理
-          */
           if (
             xhr.status >= 200 &&
             xhr.status < 300 &&
@@ -267,33 +249,30 @@ body {
               var html =
                 xhr.responseText;
 
-              /*
-                JavaScript自身の文字列を
-                bodyタグと誤認しないよう、
-                "<body" を直接ソースに書かない
-              */
-
-              var bodyStartTag =
-                "<" + "body";
-
-              var bodyEndTag =
-                "</" + "body>";
-
               var lowerHtml =
                 html.toLowerCase();
 
+              /*
+                タグ名を分割して生成する。
+                取得対象HTML内のこのスクリプト自身を
+                開始位置として誤認しないため。
+              */
+
+              var startMarker =
+                "<" + "bo" + "dy";
+
+              var endMarker =
+                "</" + "bo" + "dy>";
+
               var start =
                 lowerHtml.indexOf(
-                  bodyStartTag
+                  startMarker
                 );
 
               if (start < 0) {
                 return;
               }
 
-              /*
-                開始bodyタグの > を探す
-              */
               start =
                 html.indexOf(
                   ">",
@@ -304,14 +283,12 @@ body {
                 return;
               }
 
-              start += 1;
+              start =
+                start + 1;
 
-              /*
-                最後のbody終了タグを探す
-              */
               var end =
                 lowerHtml.lastIndexOf(
-                  bodyEndTag
+                  endMarker
                 );
 
               if (
@@ -321,26 +298,20 @@ body {
                 return;
               }
 
-              /*
-                body内部だけ取得
-              */
               var newBody =
                 html.substring(
                   start,
                   end
                 );
 
-              /*
-                成功した場合だけ画面更新
-              */
               document.body.innerHTML =
                 newBody;
 
             } catch (e) {
 
               /*
-                HTML解析失敗時は
-                現在表示をそのまま維持
+                解析に失敗した場合は
+                現在の表示を維持する。
               */
 
             }
@@ -348,10 +319,8 @@ body {
           }
 
           /*
-            404 / 500 / 504 / Wi-Fi切断などは
-            何もしない。
-
-            次の10分後に再試行。
+            通信エラーの場合も画面は変更しない。
+            次回の定期処理で再試行する。
           */
 
         };
@@ -361,8 +330,7 @@ body {
     } catch (e) {
 
       /*
-        通信開始自体に失敗しても
-        現在表示をそのまま維持
+        現在の表示を維持する。
       */
 
     }
@@ -370,9 +338,6 @@ body {
   }
 
 
-  /*
-    10分ごとに再取得
-  */
   setInterval(
     updateWeather,
     UPDATE_INTERVAL
@@ -392,17 +357,11 @@ body {
 </div>
 
 <div class="updated">
-  2026年08月18日 15:17 更新
+  2026年08月18日 15:41 更新
 </div>
 
 
-<!-- ==============================
-     上段
-     ============================== -->
-
 <div class="main-panel">
-
-  <!-- 左：現在天気 -->
 
   <div class="main-cell weather-cell">
 
@@ -416,8 +375,6 @@ body {
 
   </div>
 
-
-  <!-- 中央：気圧 -->
 
   <div class="main-cell pressure-cell">
 
@@ -437,8 +394,6 @@ body {
   </div>
 
 
-  <!-- 右：風 -->
-
   <div class="main-cell wind-cell">
 
     <div class="wind-arrow">
@@ -446,7 +401,7 @@ body {
     </div>
 
     <div class="wind-speed">
-      5.7 m/s
+      4.6 m/s
     </div>
 
     <div class="wind-direction">
@@ -458,12 +413,8 @@ body {
 </div>
 
 
-<!-- ==============================
-     現在値
-     ============================== -->
-
 <div class="current">
-  現在 31.0 ℃　湿度 62 %
+  現在 30.0 ℃　湿度 66 %
 </div>
 
 <div class="sky">
@@ -476,14 +427,10 @@ body {
 <div class="rule"></div>
 
 
-<!-- ==============================
-     予報
-     ============================== -->
-
 <div class="forecast">
 
   今日 ↑31 ℃
-  （15時頃）
+  （16時頃）
 
   <br>
 
@@ -497,10 +444,6 @@ body {
   降水確率 28 %
 </div>
 
-
-<!-- ==============================
-     今日の傾向
-     ============================== -->
 
 <div class="trend-title">
   ──── 今日の傾向 ────
@@ -520,10 +463,6 @@ body {
 
 </div>
 
-
-<!-- ==============================
-     時間別
-     ============================== -->
 
 <table class="hourly">
 
@@ -556,7 +495,7 @@ body {
   <tr>
 
     <td>
-      18時 29℃ 0%
+      18時 30℃ 0%
     </td>
 
     <td>
