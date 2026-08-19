@@ -1,9 +1,9 @@
 {
-  "updated": "2026年08月19日 18:18 更新",
+  "updated": "2026年08月19日 18:52 更新",
   "current_icon": "☁",
   "current_weather": "くもり",
   "pressure": 1015.0,
-  "pressure_delta_24h": 0.0,
+  "pressure_delta_24h": -1.0,
   "temperature": 29.0,
   "humidity": 70,
   "wind_direction_deg": 190.0,
