@@ -1,7 +1,7 @@
 {
-  "updated": "2026年08月21日 21:15 更新",
-  "current_icon": "☂",
-  "current_weather": "雨",
+  "updated": "2026年08月21日 22:14 更新",
+  "current_icon": "☁",
+  "current_weather": "くもり",
   "pressure": 1013.0,
   "pressure_delta_24h": -1.0,
   "temperature": 27.0,
@@ -10,8 +10,8 @@
   "wind_direction": "南南西",
   "wind_arrow": "↑",
   "wind_speed": 5.7,
-  "precipitation_probability": 0,
+  "precipitation_probability": null,
   "cloud_okta": 7,
   "dewpoint": 25.0,
-  "cloud_base_km": 0.3
+  "cloud_base_km": 0.4
 }
