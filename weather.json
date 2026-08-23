@@ -1,5 +1,5 @@
 {
-  "updated": "2026年08月23日 22:05 更新",
+  "updated": "2026年08月23日 22:41 更新",
   "current_icon": "☀",
   "current_weather": "晴れ",
   "pressure": 1016.0,
@@ -13,5 +13,5 @@
   "precipitation_probability": null,
   "cloud_okta": 2,
   "dewpoint": 25.0,
-  "cloud_base_km": 0.9
+  "cloud_base_km": 0.6
 }
