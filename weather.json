@@ -1,17 +1,17 @@
 {
-  "updated": "2026年10月26日 04:55 更新",
+  "updated": "2026年10月26日 07:27 更新",
   "current_icon": "☂",
   "current_weather": "雨",
-  "pressure": 1017.0,
-  "pressure_delta_24h": 1.0,
-  "temperature": 21.0,
-  "humidity": 88,
+  "pressure": 1018.0,
+  "pressure_delta_24h": 3.0,
+  "temperature": 20.0,
+  "humidity": 94,
   "wind_direction_deg": 70.0,
   "wind_direction": "東北東",
   "wind_arrow": "←",
-  "wind_speed": 5.7,
+  "wind_speed": 6.7,
   "precipitation_probability": 100,
   "cloud_okta": 7,
   "dewpoint": 19.0,
-  "cloud_base_km": 0.3
+  "cloud_base_km": 0.2
 }
